@@ -1,0 +1,28 @@
+.rvt-autocomplete {
+  position: relative;
+}
+
+.rvt-autocomplete__results {
+  position: absolute;
+  margin-top: 1rem;
+  padding: .75rem 0;
+  width: 100%;
+  z-index: 999;
+}
+
+.rvt-autocomplete__result {
+  display: block;
+  padding: 0.5rem 1rem;
+}
+
+.rvt-autocomplete__result:hover, .rvt-autocomplete__result.active {
+  cursor: pointer;
+  background-color: #006298;
+  color: #ffffff;
+}
+
+.rvt-autocomplete__result--empty:hover {
+  color: #333333;
+  cursor: default;
+  background-color: #ffffff;
+}
