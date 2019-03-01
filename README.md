@@ -1,6 +1,8 @@
 # Rivet autocomplete
 A combobox-style autocomplete widget for [Rivet](https://rivet.iu.edu/) built using [Svelte](https://svelte.technology/).
 
+[**See Demo >**](https://levimcg.github.io/rivet-autocomplete/)
+
 ## Working with the source files
 1. `npm install`
 2. `npm run start`
