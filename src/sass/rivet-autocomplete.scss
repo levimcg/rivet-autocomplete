@@ -1,0 +1,34 @@
+// Copyright (C) 2019 The Trustees of Indiana University
+// SPDX-License-Identifier: BSD-3-Clause
+
+@import "../../node_modules/rivet-uits/sass/core/variables";
+
+.rvt-autocomplete {
+  position: relative;
+  
+  &__results {
+    position: absolute;
+    margin-top: $sm;
+    padding: .75rem 0;
+    width: 100%;
+    z-index: 999;
+  }
+  
+  &__result {
+    display: block;
+    padding: $xs $sm;
+  }
+  
+  &__result:hover,
+  &__result.active {
+    cursor: pointer;
+    background-color: $color-blue;
+    color: $color-background;
+  }
+  
+  &__result--empty:hover {
+    color: $color-black;
+    cursor: default;
+    background-color: $color-background;
+  }
+}

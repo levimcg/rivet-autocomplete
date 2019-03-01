@@ -1,0 +1,234 @@
+<div class="rvt-autocomplete" role="combobox" aria-expanded="{menuVisible ? 'true' : 'false'}">
+  <div class="rvt-sr-only" aria-live="polite">
+    {#if menuVisible}
+    {`${matches.length} of a possible ${dataSet.length} are available.
+    ${currentMatch} (${matches.indexOf(currentMatch) + 1} of ${matches.length}) is selected.`}
+    {/if}
+  </div>
+  <label for="{labelFor}">{label}</label>
+  <input
+    bind:value=inputValue
+    on:input="handleInput(event)"
+    on:keydown="handleKeydown(event)"
+    aria-activedescendant="{activeDecendant !== null ? 'result-' + activeDecendant : null}"
+    id="{labelFor}"
+    autocomplete="off"
+    type="text"
+    ref:inputEl
+  >
+  {#if menuVisible}
+  <div ref:menu class="rvt-box rvt-box--compact rvt-box--card rvt-autocomplete__results">
+    {#if matches.length < 1}
+      <span class="rvt-autocomplete__result rvt-autocompleted__result--empty">
+        {noResultsText || 'Sorry, no results found'}
+      </span>
+    {:else}
+      {#each matches as match, index}
+      <span
+        on:click="handleResultClick(match, index)"
+        class="rvt-autocomplete__result {index === activeDecendant ? ' active' : ''}"
+        role="option"
+        id="result-{index}"
+      >
+        {match}
+      </span>
+      {/each}
+    {/if}
+  </div>
+  {/if}
+</div>
+
+<script>
+  /**
+   * Copyright (C) 2019 The Trustees of Indiana University
+   * SPDX-License-Identifier: BSD-3-Clause
+   */
+  export default {
+    data() {
+      return {
+        menuVisible: false,
+        inputValue: '',
+        dataSet: [],
+        matches: [],
+        activeDecendant: null,
+        thereshold: 0,
+        matchStrategy: null
+      }
+    },
+    
+    oncreate() {
+      /**
+       * Need to bind this method when the component is created
+       * so that it preserves the correct context for "this" when
+       * we use it later.
+       */
+      this.handleClickOutside = this.handleClickOutside.bind(this);
+      
+      // Add event listener for refs
+      document.addEventListener('click', this.handleClickOutside, false);
+    },
+    
+    ondestroy() {
+      // clean up eventListeners
+      document.removeEventListener('click', this.handleClickOutside, false);
+    },
+
+    computed: {
+      labelFor: ({label}) => label.replace(/\s+/g, '-').toLowerCase(),
+      
+      currentMatch: ({activeDecendant, matches}) => {
+        return matches[activeDecendant] || 'Nothing ';
+      }
+    },
+    
+    methods: {
+      open() {
+        this.set({
+          menuVisible: true
+        });
+      },
+      
+      close() {
+        this.set({
+          menuVisible: false,
+          matches: [],
+          activeDecendant: null
+        });  
+      },
+      
+      handleResultClick(match, index) {
+        this.set({
+          inputValue: match,
+          menuVisible: false,
+          matches: []
+        });
+        
+        this.dispatchSelection(match);
+      },
+      
+      handleClickOutside(event) {
+        /**
+         * If the menu isn't visible the ref hasn't been created, so bail.
+         */
+        if (!this.refs.menu) return;
+        
+        /**
+         * This checks to make sure that the event target was NOT the menu,
+         * anything inside the menu, or the input itself. If it wasn't
+         * then it closes the menu. This makes it so the menus closes
+         * when the user clicks anywhere outside of it.
+         */
+        if (event.target !== this.refs.menu && event.target !== this.refs.inputEl && !this.refs.menu.contains(event.target)) {
+          this.close();
+        }
+      },
+      
+      handleInput(event) {
+        if (this.get().inputValue === '') {
+          this.close();
+          
+          return;
+        }
+        
+        if (this.get().inputValue.length > this.get().threshold) {
+          this.set({ matches: this.findMatches() });
+        }
+      },
+      
+      handleKeydown(event) {
+        var KEYS = {
+          end: 35,
+          left: 37,
+          up: 38,
+          right: 39,
+          down: 40,
+          tab: 9,
+          escape: 27,
+          enter: 13,
+          space: 32
+        };
+        
+        switch (event.keyCode) {
+          case KEYS.down:
+            /**
+             * If the menu is already visible proceed with keyboard
+             * handling the down key.
+             */
+            if (this.get().activeDecendant === null && this.get().menuVisible) {
+              this.set({
+                activeDecendant: 0
+              });
+            } else {
+              this.set({
+                activeDecendant: this.get().activeDecendant + 1
+              })
+              
+              if (this.get().activeDecendant >= this.get().matches.length) {
+                this.set({activeDecendant: 0});
+              }
+            }
+            break;
+          case KEYS.up:
+            this.set({
+              activeDecendant: this.get().activeDecendant - 1
+            });
+              
+            if (this.get().activeDecendant <= -1) {
+              this.set({
+                activeDecendant: this.get().matches.length -1
+              });
+            }
+            break;
+          case KEYS.escape:
+            this.close();
+            
+            break;
+          case KEYS.tab:
+            this.close();
+            
+            break;
+          case KEYS.enter:
+            var activeMatch = this.get().matches[this.get().activeDecendant];
+            
+            if (!activeMatch) return;
+            
+            this.set({
+              inputValue: activeMatch
+            });
+            
+            this.dispatchSelection(activeMatch);
+            
+            this.close();
+            
+            break;
+          default:
+            break;
+        }
+      },
+      
+      dispatchSelection(textContent) {
+        this.fire('item-selected', {
+          item: textContent
+        })
+      },
+      
+      findMatches() {
+        this.open();
+        
+        if(this.get().matchStrategy) {
+          return this.get().matchStrategy(this.get().dataSet, this.get().inputValue);
+        } else {
+          /**
+           * Default match strategy
+           */
+          var wordMatch = new RegExp(this.get().inputValue, 'gi');
+          
+          return this.get().dataSet.filter(function(item) {
+            return item.match(wordMatch);
+          });
+        }
+        
+      }
+    }
+  }
+</script>
