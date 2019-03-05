@@ -43,6 +43,9 @@
    * Copyright (C) 2019 The Trustees of Indiana University
    * SPDX-License-Identifier: BSD-3-Clause
    */
+  
+  import KEYS from './keys';
+  
   export default {
     data() {
       return {
@@ -137,18 +140,6 @@
       },
 
       handleKeydown(event) {
-        var KEYS = {
-          end: 35,
-          left: 37,
-          up: 38,
-          right: 39,
-          down: 40,
-          tab: 9,
-          escape: 27,
-          enter: 13,
-          space: 32
-        };
-        
         switch (event.keyCode) {
           case KEYS.down:
             /**
