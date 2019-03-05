@@ -1,8 +1,8 @@
 <div class="rvt-autocomplete" role="combobox" aria-expanded="{menuVisible ? 'true' : 'false'}">
   <div class="rvt-sr-only" aria-live="polite">
     {#if menuVisible}
-    {`${matches.length} of a possible ${dataSet.length} are available.
-    ${currentMatch} (${matches.indexOf(currentMatch) + 1} of ${matches.length}) is selected.`}
+      {`${matches.length} of a possible ${dataSet.length} are available.
+      ${currentMatch} (${matches.indexOf(currentMatch) + 1} of ${matches.length}) is selected.`}
     {/if}
   </div>
   <label for="{labelFor}">{label}</label>
@@ -46,13 +46,14 @@
   export default {
     data() {
       return {
-        menuVisible: false,
-        inputValue: '',
-        dataSet: [],
-        matches: [],
         activeDecendant: null,
+        dataSet: [],
+        inputValue: '',
+        matches: [],
+        matchStrategy: null,
+        menuVisible: false,
+        onSelect: null,
         thereshold: 0,
-        matchStrategy: null
       }
     },
     
@@ -134,7 +135,7 @@
           this.set({ matches: this.findMatches() });
         }
       },
-      
+
       handleKeydown(event) {
         var KEYS = {
           end: 35,
@@ -206,28 +207,50 @@
         }
       },
       
+      /**
+       * This method gangs up firing a custom event and a callback option
+       * that developers can define to handle what happens when a user
+       * selects and option from the autocomplete. E.g. could
+       * programmattically submit a form, or update a url/route.
+       * 
+       * I may be totally off on this implementation?
+       */
+      
       dispatchSelection(textContent) {
         this.fire('item-selected', {
           item: textContent
-        })
+        });
+        
+        // Check for the existence of the onSelect method
+        
+        if (this.get().onSelect) {
+          this.get().onSelect();
+        }
       },
+      
+      // Default search match strategy
       
       findMatches() {
         this.open();
         
+        /**
+         * If the user has defined a custom search algorithm/match strategy
+         * use it here, otherwise use our default strategy.
+         */
+
         if(this.get().matchStrategy) {
           return this.get().matchStrategy(this.get().dataSet, this.get().inputValue);
         } else {
           /**
            * Default match strategy
            */
+
           var wordMatch = new RegExp(this.get().inputValue, 'gi');
-          
+
           return this.get().dataSet.filter(function(item) {
             return item.match(wordMatch);
           });
         }
-        
       }
     }
   }
